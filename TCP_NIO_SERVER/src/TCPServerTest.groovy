@@ -58,6 +58,15 @@ class TCPServerTest extends GroovyTestCase {
         assert countSuccess >= serv.testActiveHandlersNumber();
         assert serv.testActiveHandlersNumber() >= countEcho;
 
+        if (isFileExists()) {
+            setTestRequest(clients, "file");
+            Thread.sleep(10000);
+
+            int countFile = testForAsyncFileTranser(clients);
+
+            assert countFile == 5;
+        }
+
         setTestRequest(clients, " END");
         Thread.sleep(1000);
         int countEND = getTestAnswerCount(clients, " END");
@@ -74,5 +83,24 @@ class TCPServerTest extends GroovyTestCase {
             System.out.print("\nTest success");
 
         assert countEcho == 5;
+    }
+
+    static boolean  isFileExists( ) {
+        File fh = new File(Handler.fileName);
+        return (fh.exists() && !fh.isDirectory());
+    }
+
+    static int testForAsyncFileTranser(LinkedList<TCPClient> clients) {
+        File fh       = new File(Handler.fileName);
+        int countFile = 0;
+        for (TCPClient client : clients) {
+            File f = new File(client.fileName);
+            if (f.exists() && !f.isDirectory()) {
+                assert f.size() == fh.size();
+                countFile++;
+            }
+        }
+
+        return countFile;
     }
 }
