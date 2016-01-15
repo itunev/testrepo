@@ -23,18 +23,19 @@ public class TCPClient implements Runnable{
     public  volatile String   testRequest = "";
     public  volatile String   testAnswer  = "";
     public  volatile boolean  success     = true;
+    public  volatile String   fileName    = "file";
 
-    TCPClient( ) {
+    public TCPClient( ) {
         serverPort = 1080;
         selfPort = 1880;
     }
 
-    TCPClient(int serverPort) {
+    public TCPClient(int serverPort) {
         this.serverPort = serverPort;
         selfPort = 1880;
     }
 
-    TCPClient(int serverPort, int selfPort) {
+    public TCPClient(int serverPort, int selfPort) {
         this.serverPort = serverPort;
         this.selfPort = selfPort;
     }
@@ -121,9 +122,10 @@ public class TCPClient implements Runnable{
 
     public boolean sendTestRequest () throws IOException {
         sc.write(ByteBuffer.wrap(testRequest.getBytes()));
+        boolean isFileRequesting = testRequest.contains("file");
         testRequest = "";
 
-        return testRequest.contains("file");
+        return isFileRequesting;
     }
 
     /**
@@ -165,14 +167,14 @@ public class TCPClient implements Runnable{
         long bytesCount = 0;
         long bytesGet;
         int BUFFER_SIZE = 1024;
-        FileOutputStream toFileStream = new FileOutputStream("file");//http://www.programcreek.com/java-api-examples/index.php?source_dir=my-ministry-assistant-master/src/com/myMinistry/util/FileUtils.java
+        FileOutputStream toFileStream = new FileOutputStream(fileName);
         FileChannel fChannel = toFileStream.getChannel();
         fChannel.position(0);
 
         do {
             bytesGet = fChannel.transferFrom(sc, fChannel.position(), BUFFER_SIZE);
             bytesCount += bytesGet;
-            System.out.println("." + bytesCount + " bytes get of: " + size);
+//            System.out.println("." + bytesCount + " bytes get of: " + size);
             fChannel.position(bytesCount);
 //            Thread.sleep(1);
         }

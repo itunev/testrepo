@@ -33,6 +33,7 @@ public class Handler implements Runnable {
     private boolean             done;
     private ByteBuffer          buffer;
     private String              response;
+    public  static String       fileName = "file";
 
     private class FileTransfer {
         private FileInputStream fromFileStream;
@@ -60,7 +61,7 @@ public class Handler implements Runnable {
          */
         public boolean PrepareFileChannelForSending( ) throws IOException, InterruptedException {
             long size = 0;
-            if (isFileExists("file"))
+            if (isFileExists(fileName))
                 size = openFileChannel();
 
             // send 16 bytes with info about size of file
@@ -90,7 +91,7 @@ public class Handler implements Runnable {
          */
         public long openFileChannel( ) throws IOException, InterruptedException {
         /* preparing of variables to file sending */
-            fromFileStream = new FileInputStream("file");//http://www.programcreek.com/java-api-examples/index.php?source_dir=my-ministry-assistant-master/src/com/myMinistry/util/FileUtils.java
+            fromFileStream = new FileInputStream(fileName);
             fChannel = fromFileStream.getChannel();
             fChannel.position(0);
 
@@ -106,7 +107,7 @@ public class Handler implements Runnable {
         public boolean sendFilePortion( ) throws IOException, InterruptedException {
             long bytesSent = fChannel.transferTo(fChannel.position(), BUFFER_SIZE, sChannel);
             fChannel.position(fChannel.position() + bytesSent);
-            System.out.println("sent: " + ((double)fChannel.position() / (double)fChannel.size() * 100.0) + "%");
+//            System.out.println("sent: " + ((double)fChannel.position() / (double)fChannel.size() * 100.0) + "%");
 
             return (fChannel.size() != fChannel.position());
         }
@@ -119,7 +120,6 @@ public class Handler implements Runnable {
             fChannel.close();
             fromFileStream.close();
         }
-
     }
 
     public Handler(SocketChannel ch, TCPServer ssc) throws IOException {

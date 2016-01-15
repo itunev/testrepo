@@ -32,12 +32,12 @@ public class TCPServer implements Runnable {
         return executor.getActiveCount();
     }
 
-    TCPServer() {
+    public TCPServer() {
         PORT = 1080;
         init();
     }
 
-    TCPServer(int port) {
+    public TCPServer(int port) {
         PORT = port;
         init();
     }
