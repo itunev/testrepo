@@ -1,21 +1,28 @@
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-class TCPServerTest extends GroovyTestCase {
-    @Test
-    void testSomething() {
-        final ExecutorService threadPool = Executors.newFixedThreadPool(6);
+class TCPServerTest extends Assert {
+    static final int             CLIENTS_COUNT = 5;
+    static final ExecutorService threadPool    = Executors.newFixedThreadPool(CLIENTS_COUNT + 1);
+    static TCPServer             serv          = new TCPServer(1080);
+    static LinkedList<TCPClient> clients       = new LinkedList<TCPClient>();
+    static int                   successClients;
+    static int                   echoCount;
+    static int                   filesCount;
 
-        TCPServer serv = new TCPServer(1080);
+    @Before
+    public void setUpServerAndClients() {
         threadPool.submit(serv);
         Thread.sleep(10);
 
         assert serv.testActiveHandlersNumber() == 0;
 
-        LinkedList<TCPClient> clients = new LinkedList<TCPClient>();
         for (int i = 0; i < 5; i++) {
             clients.push(new TCPClient(1080, 1881 + i));
             clients[i].fileName = "file" + (1881 + i);
@@ -24,7 +31,50 @@ class TCPServerTest extends GroovyTestCase {
 
         Thread.sleep(1000);
 
-        testForAsyncRequest(serv, clients);
+        successClients = 0;
+        for (TCPClient client : clients)
+            if (client.success)
+                successClients ++;
+
+        assert successClients == CLIENTS_COUNT;
+    }
+
+    @Test
+    public void testForAsyncRequest() {
+        setTestRequest(clients, "echo");
+        Thread.sleep(1000);
+        echoCount = getTestAnswerCount(clients, "echo");
+
+        assert successClients >= serv.testActiveHandlersNumber();
+        assert serv.testActiveHandlersNumber() >= echoCount;
+
+        if (isFileExists()) {
+            setTestRequest(clients, "file");
+            Thread.sleep(10000);
+            filesCount = testForAsyncFileTranser(clients);
+
+            assert filesCount == CLIENTS_COUNT;
+        }
+    }
+
+    @After
+    public void closeServerAndClients() {
+        System.out.print("\ncountSuccess: " + successClients + "\ncountEcho: " + echoCount);
+        if (echoCount < CLIENTS_COUNT)
+            System.out.print("\nTest result is not reliable");
+        else
+            System.out.print("\nTest success");
+
+        assert echoCount == CLIENTS_COUNT;
+
+        setTestRequest(clients, " END");
+        Thread.sleep(1000);
+        int countEND = getTestAnswerCount(clients, " END");
+
+        Thread.sleep(1000);
+
+        assert serv.testActiveHandlersNumber() == 0;
+        assert echoCount == countEND;
 
         serv.stop();
         threadPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
@@ -42,46 +92,6 @@ class TCPServerTest extends GroovyTestCase {
     static void setTestRequest(LinkedList<TCPClient> clients, String request) {
         for (TCPClient client : clients)
             client.testRequest = request;
-    }
-
-    static void testForAsyncRequest(TCPServer serv, LinkedList<TCPClient> clients) {
-        int countSuccess = 0;
-        for (TCPClient client : clients)
-            if (client.success)
-                countSuccess ++;
-
-        setTestRequest(clients, "echo");
-        Thread.sleep(1000);
-        int countEcho = getTestAnswerCount(clients, "echo");
-
-        assert countSuccess >= serv.testActiveHandlersNumber();
-        assert serv.testActiveHandlersNumber() >= countEcho;
-
-        if (isFileExists()) {
-            setTestRequest(clients, "file");
-            Thread.sleep(10000);
-
-            int countFile = testForAsyncFileTranser(clients);
-
-            assert countFile == 5;
-        }
-
-        setTestRequest(clients, " END");
-        Thread.sleep(1000);
-        int countEND = getTestAnswerCount(clients, " END");
-
-        Thread.sleep(1000);
-
-        assert serv.testActiveHandlersNumber() == 0;
-        assert countEcho == countEND;
-
-        System.out.print("\ncountSuccess: " + countSuccess + "\ncountEcho: " + countEcho + "\ncountEND: " + countEND);
-        if (countEcho < 5)
-            System.out.print("\nTest result is not reliable");
-        else
-            System.out.print("\nTest success");
-
-        assert countEcho == 5;
     }
 
     static boolean  isFileExists( ) {
