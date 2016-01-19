@@ -1,7 +1,3 @@
-// http://serverfault.com/questions/5729/file-transfer-using-telnet
-// You should be able to use Kermit to transfer files over telnet, you can use C-Kermit as the telnet client to do so. Its only availible for Unix/Linux based systems though.
-// http://www.cyberforum.ru/java-networks/thread503897.html
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -1,15 +1,3 @@
-/**
- * Created by igor on 1/5/16.
- * based on http://habrahabr.ru/post/70690/
- *          http://habrahabr.ru/sandbox/22757/
- *          http://www.javaportal.ru/java/articles/java_http_web/article02.html
- *
- *          http://javatutor.net/books/tiej/socket
- *          http://howtodoinjava.com/2015/03/24/java-thread-pool-executor-example/
- *
- *          ...
- */
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
